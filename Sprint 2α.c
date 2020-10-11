@@ -20,7 +20,6 @@ Booleen EchoActif = FAUX;
 #define MSG_CHARGE "## consultation de la charge de travail de \"%s\"\n"
 #define MSG_PROGRESSION "## pour la commande \"%s\", pour la specialite \"%s\" : \"%d\" heures de plus ont ete realisees\n"
 #define MSG_SPECIALITE_TOUS "## consultation des travailleurs competents pour chaque specialite\n"
-#define MSG_CLIENT_TOUS "## consultation des commandes effectuees par chaque client\n"
 #define MSG_PROGGRESSION_PASSE "## une reallocation est requise\n"
 // Lexemes -------------------------------------------------------------------- 
 #define LGMOT 35
@@ -60,7 +59,10 @@ typedef struct {
 // client −−−−−−−−−−−−−−−−−−−−−−−−−−
 #define MAX_CLIENTS 10
 typedef struct {
-	Mot tab_clients[MAX_CLIENTS];
+	Mot nom;
+} Client;
+typedef struct {
+	Client tab_clients[MAX_CLIENTS];
 	unsigned int nb_clients;
 } Clients;
 // Instructions --------------------------------------------------------------- 
@@ -111,15 +113,21 @@ void traite_consultation_travailleurs(Travailleurs* list_worker) {
 
 	}
 }
-void traite_consultation_commandes() {
+// Consultation commandes----------------
+void traite_consultation_commandes(Clients* liste_customer) {
 	Mot nom_client;
 	get_id(nom_client);
-	if (strcmp(nom_client, "tous") == 0)
+	unsigned int i;
+	if (strcmp(nom_client, "tous") == 0) 
 	{
-		printf(MSG_CLIENT_TOUS, nom_client);
+		for (i = 0; i < liste_customer->nb_clients; i++)
+			printf(MSG_CONSULTATION_COMMANDE, liste_customer->tab_clients[i].nom); //Permet d'afficher tous les clients enregistres dans la base
 	}
 	else {
-		printf(MSG_CONSULTATION_COMMANDE, nom_client);
+		for (i = 0; i < liste_customer->nb_clients; i++)
+			if (strcmp(nom_client, liste_customer->tab_clients[i].nom) == 0) {
+				printf(MSG_CONSULTATION_COMMANDE, liste_customer->tab_clients[i].nom);
+			}
 	}
 }
 void traite_nouvelle_commande() {
@@ -171,6 +179,8 @@ int main(int argc, char* argv[]) {
 	Spe.nb_specialites = 0;
 	Travailleurs Worker;
 	Worker.nb_travailleurs = 0;
+	Clients Customer;
+	Customer.nb_clients = 0;
 	while (VRAI) {
 		get_id(buffer);
 		if (strcmp(buffer, "passe") == 0)
@@ -191,7 +201,7 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 		if (strcmp(buffer, "demarche") == 0) {
-			traite_demarche();
+			traite_demarche(&Customer);
 			continue;
 		}
 		if (strcmp(buffer, "travailleurs") == 0) {
@@ -199,7 +209,7 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 		if (strcmp(buffer, "client") == 0) {
-			traite_consultation_commandes();
+			traite_consultation_commandes(&Customer);
 			continue;
 		}
 		if (strcmp(buffer, "commande") == 0) {
